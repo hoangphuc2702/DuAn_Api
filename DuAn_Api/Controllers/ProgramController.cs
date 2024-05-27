@@ -56,7 +56,9 @@ namespace DuAn_Api.Controllers
             try
             {
                 conn = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
-                cmd = new SqlCommand("Select * from PROGRAM where programId = @Id", conn);
+                cmd = new SqlCommand("Select * " +
+                                "from PROGRAM " +
+                                "where programId = @Id", conn);
                 cmd.Parameters.AddWithValue("@Id", id);
 
                 DataTable dt = new DataTable();
@@ -114,7 +116,9 @@ namespace DuAn_Api.Controllers
                 cmd = new SqlCommand("Set IDENTITY_INSERT PROGRAM on", conn);
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqlCommand("Insert into PROGRAM (programId, programName, startDate, endDate)  values (@programId, @programName, @startDate, @endDate);", conn);
+                cmd = new SqlCommand("Insert into PROGRAM " +
+                                "(programId, programName, startDate, endDate)  values " +
+                                "(@programId, @programName, @startDate, @endDate);", conn);
                 cmd.Parameters.AddWithValue("@programId", programId);
                 cmd.Parameters.AddWithValue("@programName", programName);
                 cmd.Parameters.AddWithValue("@startDate", startDate);
@@ -124,6 +128,65 @@ namespace DuAn_Api.Controllers
 
 
                 cmd = new SqlCommand("Set IDENTITY_INSERT PROGRAM off", conn);
+                cmd.ExecuteNonQuery();
+
+
+                cmd = new SqlCommand("Select * from PROGRAM " +
+                                "where programName = @programName", conn);
+                cmd.Parameters.AddWithValue("@programName", programName);
+
+                DataTable dt = new DataTable();
+
+                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                adapter.Fill(dt);
+
+                cmd.ExecuteNonQuery();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound();
+                }
+
+                DataRow row = dt.Rows[0];
+
+                ProgramModel program = new ProgramModel
+                {
+                    programId = int.Parse(row["programId"].ToString()),
+                    programName = row["programName"].ToString(),
+                    startDate = DateTime.Parse(row["startDate"].ToString()),
+                    endDate = DateTime.Parse(row["endDate"].ToString())
+                };
+
+                conn.Close();
+
+                return Ok(program);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        [HttpPut]
+        [Route("UpdateProgram")]
+        public async Task<IActionResult> UpdateProgram(int programId, String programName, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                conn = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+
+                conn.Open();
+
+                cmd = new SqlCommand("Update PROGRAM " +
+                                    "set programName = @programName, " +
+                                    "startDate = @startDate, " +
+                                    "endDate = @endDate " +
+                                    "where programId = @programId", conn);
+                cmd.Parameters.AddWithValue("@programId", programId);
+                cmd.Parameters.AddWithValue("@programName", programName);
+                cmd.Parameters.AddWithValue("@startDate", startDate);
+                cmd.Parameters.AddWithValue("@endDate", endDate);
+
                 cmd.ExecuteNonQuery();
 
 
