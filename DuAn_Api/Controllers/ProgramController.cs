@@ -91,5 +91,75 @@ namespace DuAn_Api.Controllers
                 throw ex;
             }
         }
+
+        [HttpPost]
+        [Route("CreateProgram")]
+        public async Task<IActionResult> CreateProgram(String programName, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                conn = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+
+                
+                conn.Open();
+
+                cmd = new SqlCommand("Select count(*) from PROGRAM", conn);
+                cmd.ExecuteNonQuery();
+
+                int programCount = (int)await cmd.ExecuteScalarAsync();
+
+                // Gán programId cho chương trình mới
+                int programId = programCount + 1;
+
+                cmd = new SqlCommand("Set IDENTITY_INSERT PROGRAM on", conn);
+                cmd.ExecuteNonQuery();
+
+                cmd = new SqlCommand("Insert into PROGRAM (programId, programName, startDate, endDate)  values (@programId, @programName, @startDate, @endDate);", conn);
+                cmd.Parameters.AddWithValue("@programId", programId);
+                cmd.Parameters.AddWithValue("@programName", programName);
+                cmd.Parameters.AddWithValue("@startDate", startDate);
+                cmd.Parameters.AddWithValue("@endDate", endDate);
+
+                cmd.ExecuteNonQuery();
+
+
+                cmd = new SqlCommand("Set IDENTITY_INSERT PROGRAM off", conn);
+                cmd.ExecuteNonQuery();
+
+
+                cmd = new SqlCommand("Select * from PROGRAM where programName = @programName", conn);
+                cmd.Parameters.AddWithValue("@programName", programName);
+
+                DataTable dt = new DataTable();
+
+                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                adapter.Fill(dt);
+
+                cmd.ExecuteNonQuery();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound();
+                }
+
+                DataRow row = dt.Rows[0];
+
+                ProgramModel program = new ProgramModel
+                {
+                    programId = int.Parse(row["programId"].ToString()),
+                    programName = row["programName"].ToString(),
+                    startDate = DateTime.Parse(row["startDate"].ToString()),
+                    endDate = DateTime.Parse(row["endDate"].ToString())
+                };
+
+                conn.Close();
+
+                return Ok(program);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }
