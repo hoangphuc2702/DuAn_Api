@@ -12,5 +12,14 @@ namespace DuAn_Api.Models
 
         [Required]
         public string ImgLink { get; set; } = "";
+
+        [Required]
+        public string ImageName { get; set; }
+
+        [Required]
+        public int Priority { get; set; }
+
+        [Required]
+        public string ImageDes { get; set; }
     }
 }
